@@ -18,28 +18,35 @@ clock = pg.time.Clock()  # Объект для отслеживания врем
 draw_options = pymunk.pygame_util.DrawOptions(surface)
 # Создаем пространство pymunk в котором будет происходить движение.
 space = pymunk.Space()
-#raise NotImplementedError(type(space))
 # Устанавливаем гравитацию в нашем пространстве.
 space.gravity = 0, 2000
+# Размер одного шарика.
+ball_radius = 25
+n = 5  # Количество неподвижных шариков.
+k = 10  # Количество подвижных шариков.
+y = HEIGHT / 2  # Их высота.
 
 
-def create_ball(space:pymunk.space.Space, pos:tuple, pos_pin:tuple, fl_pin:bool):
+def create_ball(space: pymunk.space.Space, pos: tuple, pos_pin: tuple,
+                fl_pin: bool) -> None:
     """Функция для создания динамического объекта - мяч
 
     """
     ball_mass = 10
-    # вычисляем момент это нужно делать для динамических тел
+    # Вычисляем момент, это нужно делать для динамических тел.
     ball_moment = pymunk.moment_for_circle(ball_mass, 0, ball_radius)
-    # создаем тело
+    # Создаем тело.
     ball_body = pymunk.Body(ball_mass, ball_moment)
-    # определяе его начальное положение
+    # Определяем его начальное положение.
     ball_body.position = pos
-    # наконецто можно создать форму нашего объекта
+    # Создаём форму нашего объекта.
     ball_shape = pymunk.Circle(ball_body, ball_radius)
-    ball_shape.elasticity = 0.9999999  # добавим форме упрогость
-    ball_shape.friction = 1.0  # трение между объектами
+    # Добавим форме упругость.
+    ball_shape.elasticity = 0.9999999
+    # Добавим трение между объектами.
+    ball_shape.friction = 1.0
 
-    # добавляем в пространство наш объект для отрисовки
+    # Добавляем в пространство наш объект для отрисовки.
     space.add(ball_body, ball_shape)
 
     if fl_pin:
@@ -47,21 +54,18 @@ def create_ball(space:pymunk.space.Space, pos:tuple, pos_pin:tuple, fl_pin:bool)
         space.add(pj)
 
 
-# конец создания мяча
-def get_x(i, n):
+def get_x(i: int, n: int) -> float:
+    """Функция для получение координаты х шарика i из числа n
+
+    """
     return 2 * ball_radius * (i - n // 2) + WIDTH / 2
 
 
-ball_radius = 25
-n = 5
-k = 10
-y = HEIGHT / 2
 for i in range(n):
     x = get_x(i, n + k)
     create_ball(space, (x, y), (x, 50), True)
 
 for i in range(n, n + k):
-    print(i)
     alfa = math.pi / 3
     r = HEIGHT / 2 - 50
     y0 = 50
@@ -70,29 +74,31 @@ for i in range(n, n + k):
                 (x, 50), True)
 
 
-def update_color_ball(space):
+def update_color_ball(space: pymunk.space.Space) -> None:
+    """Функция для изменения цвета шариков в зависимости от их скорости
+
+    """
     mv = [math.hypot(v.velocity.x, v.velocity.y) for v in space.bodies]
     if max(mv) > 0:
         mv = list(map(lambda x: x * 255 / max(mv), mv))
-    # print(max(mv))
-    # raise NotImplementedError(max(mv))
     for i, ball in enumerate(space.shapes):
         ball.color = (mv[i], 32, 77, 255)
-        # print(i, ball.velocity.x,ball.velocity.y)
 
 
 while True:
-    surface.fill(pg.Color('white'))  # задний фон экрана черный
+    # Задний фон экрана черный.
+    surface.fill(pg.Color('white'))
 
-    # обработчик событий в процессе выполнения
+    # Обработчик событий в процессе выполнения.
     for i in pg.event.get():
         if i.type == pg.QUIT:
             exit()
-
     update_color_ball(space)
-    space.step(1 / FPS)  # устанавливаем шаг отрисовки для
-    space.debug_draw(draw_options)  # включаем отрисовку пространства
+    # Устанавливаем шаг отрисовки для pymunk.
+    space.step(1 / FPS)
+    # Включаем отрисовку пространства.
+    space.debug_draw(draw_options)
 
     pg.display.flip()
-    clock.tick(
-        FPS)  # передается непосредственно желаемое количество кадров в секунду
+    # Передаем количество кадров в секунду.
+    clock.tick(FPS)
